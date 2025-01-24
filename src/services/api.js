@@ -1,15 +1,15 @@
 import axios from "axios";
 
 // API URL'i güncelle
-const BASE_URL = "https://web-production-cfc0.up.railway.app";
+const BASE_URL =
+  import.meta.env.VITE_API_URL || "https://web-production-cfc0.up.railway.app";
 
 const api = axios.create({
-  baseURL: `${BASE_URL}/api`,
+  baseURL: BASE_URL,
   headers: {
     "Content-Type": "application/json",
     Accept: "application/json",
   },
-  credentials: "include",
   withCredentials: true,
   timeout: 10000,
 });
@@ -38,6 +38,8 @@ export const customerService = {
   getAllCustomers: async () => {
     try {
       const response = await fetch(`${BASE_URL}/api/customers`, {
+        method: "GET",
+        mode: "cors",
         credentials: "include",
         headers: {
           "Content-Type": "application/json",

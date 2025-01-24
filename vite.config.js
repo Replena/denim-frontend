@@ -9,5 +9,12 @@ export default defineConfig({
   },
   server: {
     port: 5173,
+    proxy: {
+      "/api": {
+        target: "https://web-production-cfc0.up.railway.app",
+        changeOrigin: true,
+        secure: false,
+      },
+    },
   },
 });
