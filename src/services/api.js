@@ -1,6 +1,6 @@
 import axios from "axios";
 
-// API URL'i güncelle
+// API URL'i güncelle - /api prefix'ini kaldıralım
 const BASE_URL =
   import.meta.env.VITE_API_URL || "https://web-production-cfc0.up.railway.app";
 
@@ -37,7 +37,7 @@ api.interceptors.response.use(
 export const customerService = {
   getAllCustomers: async () => {
     try {
-      const response = await fetch(`${BASE_URL}/api/customers`, {
+      const response = await fetch(`${BASE_URL}/customers`, {
         method: "GET",
         mode: "cors",
         credentials: "include",
@@ -54,7 +54,7 @@ export const customerService = {
   },
 
   getCustomerById: async (id) => {
-    const response = await fetch(`${BASE_URL}/api/customers/${id}`, {
+    const response = await fetch(`${BASE_URL}/customers/${id}`, {
       credentials: "include",
       headers: {
         "Content-Type": "application/json",
@@ -66,7 +66,7 @@ export const customerService = {
 
   createCustomer: async (customerData) => {
     try {
-      const response = await fetch(`${BASE_URL}/api/customers`, {
+      const response = await fetch(`${BASE_URL}/customers`, {
         method: "POST",
         credentials: "include",
         headers: {
@@ -138,7 +138,7 @@ export const priceService = {
       currency: "TRY",
     };
 
-    const response = await fetch(`${BASE_URL}/api/prices/calculate`, {
+    const response = await fetch(`${BASE_URL}/prices/calculate`, {
       method: "POST",
       credentials: "include",
       headers: {
@@ -154,7 +154,7 @@ export const priceService = {
     const url = customerId
       ? `/prices/history?customer_id=${customerId}`
       : "/prices/history";
-    const response = await fetch(`${BASE_URL}/api${url}`, {
+    const response = await fetch(`${BASE_URL}${url}`, {
       credentials: "include",
       headers: {
         "Content-Type": "application/json",
