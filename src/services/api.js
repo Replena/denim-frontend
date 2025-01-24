@@ -1,7 +1,7 @@
 import axios from "axios";
 
-// API URL'i environment variable olarak tanımla
-const BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:8081/api";
+// API URL'i environment variable olarak güncelle
+const BASE_URL = "https://web-production-cfc0.up.railway.app/api";
 
 const api = axios.create({
   baseURL: BASE_URL,
