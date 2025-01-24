@@ -49,41 +49,30 @@ const PriceTable = ({
     }
 
     try {
-      const fabricValue = parseFloat(totals.fabric) || 0;
-      const liningValue = parseFloat(totals.lining) || 0;
-      const trimValue = parseFloat(totals.trim) || 0;
-      const overheadValue = parseFloat(parameters.overhead) || 0;
-      const commissionValue = parseFloat(parameters.commission) || 0;
-      const vatValue = parseFloat(parameters.vat) || 18;
-
       const result = await priceService.calculatePrice(
         selectedCustomer.id,
         {
-          fabric: fabricValue,
-          lining: liningValue,
-          trim: trimValue,
+          fabric: totals.fabric || 0,
+          lining: totals.lining || 0,
+          trim: totals.trim || 0,
         },
-        overheadValue,
-        commissionValue,
-        vatValue,
-        exchangeRates
+        parseFloat(parameters.overhead) || 0,
+        parseFloat(parameters.commission) || 0,
+        parseFloat(parameters.vat) || 18
       );
 
-      if (!result) {
-        console.error("Backend'den sonuç alınamadı");
-        return;
-      }
+      if (result?.success) {
+        setCalculatedPrices(result.data);
+        setIsCalculated(true);
 
-      setCalculatedPrices(result);
-      setIsCalculated(true);
+        if (onCalculate) {
+          onCalculate(result.data);
+        }
 
-      if (onCalculate) {
-        onCalculate(result);
-      }
-
-      // Fiyat geçmişini güncelle
-      if (onPriceCalculated) {
-        await onPriceCalculated();
+        // Fiyat geçmişini güncelle
+        if (onPriceCalculated) {
+          await onPriceCalculated();
+        }
       }
     } catch (error) {
       console.error("Fiyat hesaplama hatası:", error);
@@ -158,70 +147,67 @@ const PriceTable = ({
   };
 
   const renderPriceRow = (range) => {
-    if (!calculatedPrices?.finalPriceEUR || !isCalculated) {
-      return (
-        <TableRow key={range}>
-          <TableCell>{range}</TableCell>
-          <TableCell>-</TableCell>
-          <TableCell>
-            <Box sx={{ display: "flex", flexDirection: "column", gap: 0.5 }}>
-              <Typography>{parameters.overhead}%</Typography>
-              <Typography>-</Typography>
-            </Box>
-          </TableCell>
-          <TableCell>
-            <Box sx={{ display: "flex", flexDirection: "column", gap: 0.5 }}>
-              <Typography>{parameters.vat}%</Typography>
-              <Typography>-</Typography>
-            </Box>
-          </TableCell>
-          <TableCell>-</TableCell>
-          <TableCell>-</TableCell>
-          <TableCell>
-            <Box sx={{ display: "flex", flexDirection: "column", gap: 0.5 }}>
-              <Typography>{parameters.commission}%</Typography>
-              <Typography>-</Typography>
-            </Box>
-          </TableCell>
-          <TableCell>-</TableCell>
-        </TableRow>
-      );
-    }
+    if (!isCalculated || !totals) return null;
 
-    const quantity = parseInt(range.split("-")[0] || range.replace("+", ""));
-    let discount = 0;
-    if (quantity <= 50) discount = 0;
-    else if (quantity <= 100) discount = 0.05;
-    else if (quantity <= 200) discount = 0.1;
-    else if (quantity <= 300) discount = 0.15;
-    else if (quantity <= 500) discount = 0.2;
-    else discount = 0.25;
-
+    // Ham maliyeti hesapla
     const rawCostTRY = totals.total || 0;
-    const rawCostEUR = rawCostTRY / exchangeRates.EUR_TRY;
-    const rawCostUSD = rawCostTRY / exchangeRates.USD_TRY;
+    const rawCostEUR = exchangeRates ? rawCostTRY / exchangeRates.EUR_TRY : 0;
+    const rawCostUSD = exchangeRates ? rawCostTRY / exchangeRates.USD_TRY : 0;
 
+    // Genel gider hesapla
     const overhead = parseFloat(
       (rawCostTRY * (parseFloat(parameters.overhead) / 100)).toFixed(2)
     );
     const withOverhead = parseFloat((rawCostTRY + overhead).toFixed(2));
 
+    // Kâr hesapla (20% sabit)
     const kar = parseFloat((withOverhead * 0.2).toFixed(2));
     const araToplam = parseFloat((withOverhead + kar).toFixed(2));
 
+    // Komisyon hesapla
     const komisyon = parseFloat(
       (araToplam * (parseFloat(parameters.commission) / 100)).toFixed(2)
     );
     const withKomisyon = parseFloat((araToplam + komisyon).toFixed(2));
 
+    // KDV hesapla
     const kdv = parseFloat(
       (withKomisyon * (parseFloat(parameters.vat) / 100)).toFixed(2)
     );
-    const finalPrice = parseFloat((withKomisyon + kdv).toFixed(2));
 
-    const discountedPrice = finalPrice * (1 - discount);
-    const finalPriceEUR = discountedPrice / exchangeRates.EUR_TRY;
-    const finalPriceUSD = discountedPrice / exchangeRates.USD_TRY;
+    // İndirim oranlarını belirle
+    let discountRate = 0;
+    switch (range) {
+      case "51-100":
+        discountRate = 0.05;
+        break;
+      case "101-200":
+        discountRate = 0.1;
+        break;
+      case "201-300":
+        discountRate = 0.15;
+        break;
+      case "301-500":
+        discountRate = 0.2;
+        break;
+      case "501+":
+        discountRate = 0.25;
+        break;
+      default:
+        discountRate = 0;
+    }
+
+    // Final fiyatları hesapla
+    const finalPrice = parseFloat((withKomisyon + kdv).toFixed(2));
+    const discountedPrice = parseFloat(
+      (finalPrice * (1 - discountRate)).toFixed(2)
+    );
+    const finalPriceEUR = exchangeRates
+      ? parseFloat((discountedPrice / exchangeRates.EUR_TRY).toFixed(2))
+      : 0;
+    const finalPriceUSD = exchangeRates
+      ? parseFloat((discountedPrice / exchangeRates.USD_TRY).toFixed(2))
+      : 0;
 
     return (
       <TableRow key={range}>
