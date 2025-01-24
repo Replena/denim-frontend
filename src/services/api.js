@@ -106,11 +106,16 @@ export const priceService = {
       currency: "TRY",
     };
 
+    console.log("Gönderilen veri:", requestData);
+
     try {
       const response = await api.post("/api/prices/calculate", requestData);
       return response.data;
     } catch (error) {
       console.error("Fiyat hesaplanamadı:", error);
+      if (error.response) {
+        console.error("Sunucu yanıtı:", error.response.data);
+      }
       throw error;
     }
   },
