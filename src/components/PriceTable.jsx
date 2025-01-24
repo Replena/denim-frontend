@@ -61,7 +61,12 @@ const PriceTable = ({
         parseFloat(parameters.vat) || 18
       );
 
-      if (result?.success) {
+      // Backend yanıtını kontrol et
+      console.log("Backend yanıtı:", result);
+
+      // Başarı kontrolünü düzelt
+      if (result && result.data) {
+        // success kontrolünü kaldırdık
         setCalculatedPrices(result.data);
         setIsCalculated(true);
 
@@ -73,6 +78,9 @@ const PriceTable = ({
         if (onPriceCalculated) {
           await onPriceCalculated();
         }
+      } else {
+        console.error("Geçersiz API yanıtı:", result);
+        alert("Fiyat hesaplama yanıtı geçersiz format içeriyor");
       }
     } catch (error) {
       console.error("Fiyat hesaplama hatası:", error);
@@ -147,33 +155,22 @@ const PriceTable = ({
   };
 
   const renderPriceRow = (range) => {
-    if (!isCalculated || !totals) return null;
+    if (!isCalculated || !calculatedPrices) {
+      console.log("Hesaplama yapılmadı veya fiyatlar yok");
+      return null;
+    }
 
-    // Ham maliyeti hesapla
-    const rawCostTRY = totals.total || 0;
-    const rawCostEUR = exchangeRates ? rawCostTRY / exchangeRates.EUR_TRY : 0;
-    const rawCostUSD = exchangeRates ? rawCostTRY / exchangeRates.USD_TRY : 0;
+    console.log("Hesaplanan fiyatlar:", calculatedPrices);
 
-    // Genel gider hesapla
-    const overhead = parseFloat(
-      (rawCostTRY * (parseFloat(parameters.overhead) / 100)).toFixed(2)
-    );
-    const withOverhead = parseFloat((rawCostTRY + overhead).toFixed(2));
-
-    // Kâr hesapla (20% sabit)
-    const kar = parseFloat((withOverhead * 0.2).toFixed(2));
-    const araToplam = parseFloat((withOverhead + kar).toFixed(2));
-
-    // Komisyon hesapla
-    const komisyon = parseFloat(
-      (araToplam * (parseFloat(parameters.commission) / 100)).toFixed(2)
-    );
-    const withKomisyon = parseFloat((araToplam + komisyon).toFixed(2));
-
-    // KDV hesapla
-    const kdv = parseFloat(
-      (withKomisyon * (parseFloat(parameters.vat) / 100)).toFixed(2)
-    );
+    // Backend'den gelen değerleri kullan
+    const {
+      raw_cost,
+      overhead_amount,
+      profit_amount,
+      commission_amount,
+      vat_amount,
+      final_price,
+    } = calculatedPrices;
 
     // İndirim oranlarını belirle
     let discountRate = 0;
@@ -197,54 +194,24 @@ const PriceTable = ({
         discountRate = 0;
     }
 
-    // Final fiyatları hesapla
-    const finalPrice = parseFloat((withKomisyon + kdv).toFixed(2));
-    const discountedPrice = parseFloat(
-      (finalPrice * (1 - discountRate)).toFixed(2)
-    );
-    const finalPriceEUR = exchangeRates
-      ? parseFloat((discountedPrice / exchangeRates.EUR_TRY).toFixed(2))
-      : 0;
-    const finalPriceUSD = exchangeRates
-      ? parseFloat((discountedPrice / exchangeRates.USD_TRY).toFixed(2))
-      : 0;
+    // İndirimli fiyatı hesapla
+    const discountedPrice = final_price * (1 - discountRate);
 
     return (
-      <TableRow key={range}>
+      <TableRow>
         <TableCell>{range}</TableCell>
+        <TableCell>{formatCurrency(raw_cost)}</TableCell>
+        <TableCell>{formatCurrency(overhead_amount)}</TableCell>
+        <TableCell>{formatCurrency(raw_cost + overhead_amount)}</TableCell>
+        <TableCell>{formatCurrency(profit_amount)}</TableCell>
+        <TableCell>{formatCurrency(commission_amount)}</TableCell>
+        <TableCell>{formatCurrency(vat_amount)}</TableCell>
+        <TableCell>{formatCurrency(discountedPrice)}</TableCell>
         <TableCell>
-          <Box sx={{ display: "flex", flexDirection: "column", gap: 0.5 }}>
-            <Typography>{formatCurrency(rawCostTRY, "TRY")}</Typography>
-            <Typography>{formatCurrency(rawCostEUR, "EUR")}</Typography>
-            <Typography>{formatCurrency(rawCostUSD, "USD")}</Typography>
-          </Box>
+          {formatCurrency(discountedPrice / exchangeRates.EUR_TRY, "EUR")}
         </TableCell>
         <TableCell>
-          <Box sx={{ display: "flex", flexDirection: "column", gap: 0.5 }}>
-            <Typography>{parameters.overhead}%</Typography>
-            <Typography>{formatCurrency(overhead, "TRY")}</Typography>
-          </Box>
-        </TableCell>
-        <TableCell>
-          <Box sx={{ display: "flex", flexDirection: "column", gap: 0.5 }}>
-            <Typography>{parameters.vat}%</Typography>
-            <Typography>{formatCurrency(kdv, "TRY")}</Typography>
-          </Box>
-        </TableCell>
-        <TableCell>{formatCurrency(kar, "TRY")}</TableCell>
-        <TableCell>{formatCurrency(araToplam, "TRY")}</TableCell>
-        <TableCell>
-          <Box sx={{ display: "flex", flexDirection: "column", gap: 0.5 }}>
-            <Typography>{parameters.commission}%</Typography>
-            <Typography>{formatCurrency(komisyon, "TRY")}</Typography>
-          </Box>
-        </TableCell>
-        <TableCell>
-          <Box sx={{ display: "flex", flexDirection: "column", gap: 0.5 }}>
-            <Typography>{formatCurrency(discountedPrice, "TRY")}</Typography>
-            <Typography>{formatCurrency(finalPriceEUR, "EUR")}</Typography>
-            <Typography>{formatCurrency(finalPriceUSD, "USD")}</Typography>
-          </Box>
+          {formatCurrency(discountedPrice / exchangeRates.USD_TRY, "USD")}
         </TableCell>
       </TableRow>
     );

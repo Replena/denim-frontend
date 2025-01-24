@@ -1,4 +1,4 @@
-import React, { Suspense, useState, useEffect } from "react";
+import React, { Suspense, useState, useEffect, useCallback } from "react";
 import { ThemeProvider } from "@mui/material";
 import CssBaseline from "@mui/material/CssBaseline";
 import { ToastContainer } from "react-toastify";
@@ -47,10 +47,9 @@ function App() {
     setCustomers(customersList);
   };
 
-  const handleCustomerChange = (customer) => {
-    console.log("Seçilen müşteri:", customer);
+  const handleCustomerSelect = useCallback((customer) => {
     setSelectedCustomer(customer);
-  };
+  }, []);
 
   const handleTotalsUpdate = (newTotals) => {
     setTotals(newTotals);
@@ -111,7 +110,7 @@ function App() {
         <Suspense fallback={<CircularProgress />}>
           <ExchangeRateDisplay rates={exchangeRates} />
           <div className="customer-section">
-            <CustomerSelect onCustomerSelect={handleCustomerChange} />
+            <CustomerSelect onCustomerSelect={handleCustomerSelect} />
           </div>
 
           <div className="top-section">

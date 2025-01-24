@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback, memo } from "react";
 import {
   FormControl,
   InputLabel,
@@ -23,27 +23,45 @@ const CustomerSelect = ({ onCustomerSelect }) => {
     country: "",
   });
 
-  // Müşterileri getir
-  const fetchCustomers = async () => {
+  // Müşterileri getir - useCallback ile optimize edelim
+  const fetchCustomers = useCallback(async () => {
     try {
       const data = await customerService.getAllCustomers();
-      console.log("Gelen müşteriler:", data);
-      setCustomers(data);
+      // Duplikasyonu önlemek için benzersiz ID'lere göre filtrele
+      const uniqueCustomers = Array.from(
+        new Map(data.map((item) => [item.id, item])).values()
+      );
+      setCustomers(uniqueCustomers);
     } catch (error) {
       console.error("Müşteri yükleme hatası:", error);
     }
-  };
-
-  useEffect(() => {
-    fetchCustomers();
   }, []);
+
+  // useEffect'i optimize edelim
+  useEffect(() => {
+    let mounted = true;
+
+    const loadCustomers = async () => {
+      if (mounted) {
+        await fetchCustomers();
+      }
+    };
+
+    loadCustomers();
+
+    // Cleanup function
+    return () => {
+      mounted = false;
+    };
+  }, []); // Boş dependency array
 
   const handleChange = (event) => {
     const customerId = event.target.value;
     const selected = customers.find((c) => c.id === customerId);
-    console.log("Seçilen müşteri bilgileri:", selected);
     setSelectedCustomer(customerId);
-    onCustomerSelect(selected);
+    if (selected) {
+      onCustomerSelect(selected);
+    }
   };
 
   const handleClickOpen = () => {
@@ -135,4 +153,4 @@ const CustomerSelect = ({ onCustomerSelect }) => {
   );
 };
 
-export default CustomerSelect;
+export default memo(CustomerSelect);
