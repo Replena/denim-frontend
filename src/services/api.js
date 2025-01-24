@@ -1,14 +1,15 @@
 import axios from "axios";
 
-// API URL'i environment variable olarak güncelle
-const BASE_URL = "https://web-production-cfc0.up.railway.app/api";
+// API URL'i güncelle
+const BASE_URL = "https://web-production-cfc0.up.railway.app";
 
 const api = axios.create({
-  baseURL: BASE_URL,
+  baseURL: `${BASE_URL}/api`,
   headers: {
     "Content-Type": "application/json",
     Accept: "application/json",
   },
+  credentials: "include",
   withCredentials: true,
   timeout: 10000,
 });
@@ -32,11 +33,18 @@ api.interceptors.response.use(
   }
 );
 
+// API servislerini güncelle
 export const customerService = {
   getAllCustomers: async () => {
     try {
-      const response = await api.get("/customers");
-      return response.data;
+      const response = await fetch(`${BASE_URL}/api/customers`, {
+        credentials: "include",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+      if (!response.ok) throw new Error("Ağ yanıtı başarılı değil");
+      return await response.json();
     } catch (error) {
       console.error("Müşteri listesi alınamadı:", error);
       throw error;
@@ -44,14 +52,28 @@ export const customerService = {
   },
 
   getCustomerById: async (id) => {
-    const response = await api.get(`/customers/${id}`);
-    return response.data;
+    const response = await fetch(`${BASE_URL}/api/customers/${id}`, {
+      credentials: "include",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+    if (!response.ok) throw new Error("Ağ yanıtı başarılı değil");
+    return await response.json();
   },
 
   createCustomer: async (customerData) => {
     try {
-      const response = await api.post("/customers", customerData);
-      return response.data;
+      const response = await fetch(`${BASE_URL}/api/customers`, {
+        method: "POST",
+        credentials: "include",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(customerData),
+      });
+      if (!response.ok) throw new Error("Ağ yanıtı başarılı değil");
+      return await response.json();
     } catch (error) {
       console.error("Müşteri oluşturulamadı:", error);
       throw error;
@@ -60,8 +82,16 @@ export const customerService = {
 
   updateCustomer: async (id, customerData) => {
     try {
-      const response = await api.put(`/customers/${id}`, customerData);
-      return response.data;
+      const response = await fetch(`${BASE_URL}/api/customers/${id}`, {
+        method: "PUT",
+        credentials: "include",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(customerData),
+      });
+      if (!response.ok) throw new Error("Ağ yanıtı başarılı değil");
+      return await response.json();
     } catch (error) {
       console.error("Müşteri güncellenemedi:", error);
       throw error;
@@ -70,7 +100,14 @@ export const customerService = {
 
   deleteCustomer: async (id) => {
     try {
-      await api.delete(`/customers/${id}`);
+      const response = await fetch(`${BASE_URL}/api/customers/${id}`, {
+        method: "DELETE",
+        credentials: "include",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+      if (!response.ok) throw new Error("Ağ yanıtı başarılı değil");
     } catch (error) {
       console.error("Müşteri silinemedi:", error);
       throw error;
@@ -99,15 +136,29 @@ export const priceService = {
       currency: "TRY",
     };
 
-    const response = await api.post("/prices/calculate", requestData);
-    return response.data;
+    const response = await fetch(`${BASE_URL}/api/prices/calculate`, {
+      method: "POST",
+      credentials: "include",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(requestData),
+    });
+    if (!response.ok) throw new Error("Ağ yanıtı başarılı değil");
+    return await response.json();
   },
 
   getPriceHistory: async (customerId = null) => {
     const url = customerId
       ? `/prices/history?customer_id=${customerId}`
       : "/prices/history";
-    const response = await api.get(url);
-    return response.data;
+    const response = await fetch(`${BASE_URL}/api${url}`, {
+      credentials: "include",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+    if (!response.ok) throw new Error("Ağ yanıtı başarılı değil");
+    return await response.json();
   },
 };
