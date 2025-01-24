@@ -37,16 +37,8 @@ api.interceptors.response.use(
 export const customerService = {
   getAllCustomers: async () => {
     try {
-      const response = await fetch(`${BASE_URL}/api/customers`, {
-        method: "GET",
-        mode: "cors",
-        credentials: "include",
-        headers: {
-          "Content-Type": "application/json",
-        },
-      });
-      if (!response.ok) throw new Error("Ağ yanıtı başarılı değil");
-      return await response.json();
+      const response = await api.get("/api/customers");
+      return response.data;
     } catch (error) {
       console.error("Müşteri listesi alınamadı:", error);
       throw error;
@@ -54,28 +46,19 @@ export const customerService = {
   },
 
   getCustomerById: async (id) => {
-    const response = await fetch(`${BASE_URL}/api/customers/${id}`, {
-      credentials: "include",
-      headers: {
-        "Content-Type": "application/json",
-      },
-    });
-    if (!response.ok) throw new Error("Ağ yanıtı başarılı değil");
-    return await response.json();
+    try {
+      const response = await api.get(`/api/customers/${id}`);
+      return response.data;
+    } catch (error) {
+      console.error("Müşteri detayları alınamadı:", error);
+      throw error;
+    }
   },
 
   createCustomer: async (customerData) => {
     try {
-      const response = await fetch(`${BASE_URL}/api/customers`, {
-        method: "POST",
-        credentials: "include",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(customerData),
-      });
-      if (!response.ok) throw new Error("Ağ yanıtı başarılı değil");
-      return await response.json();
+      const response = await api.post("/api/customers", customerData);
+      return response.data;
     } catch (error) {
       console.error("Müşteri oluşturulamadı:", error);
       throw error;
@@ -84,16 +67,8 @@ export const customerService = {
 
   updateCustomer: async (id, customerData) => {
     try {
-      const response = await fetch(`${BASE_URL}/api/customers/${id}`, {
-        method: "PUT",
-        credentials: "include",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(customerData),
-      });
-      if (!response.ok) throw new Error("Ağ yanıtı başarılı değil");
-      return await response.json();
+      const response = await api.put(`/api/customers/${id}`, customerData);
+      return response.data;
     } catch (error) {
       console.error("Müşteri güncellenemedi:", error);
       throw error;
@@ -102,14 +77,7 @@ export const customerService = {
 
   deleteCustomer: async (id) => {
     try {
-      const response = await fetch(`${BASE_URL}/api/customers/${id}`, {
-        method: "DELETE",
-        credentials: "include",
-        headers: {
-          "Content-Type": "application/json",
-        },
-      });
-      if (!response.ok) throw new Error("Ağ yanıtı başarılı değil");
+      await api.delete(`/api/customers/${id}`);
     } catch (error) {
       console.error("Müşteri silinemedi:", error);
       throw error;
@@ -138,29 +106,25 @@ export const priceService = {
       currency: "TRY",
     };
 
-    const response = await fetch(`${BASE_URL}/api/prices/calculate`, {
-      method: "POST",
-      credentials: "include",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(requestData),
-    });
-    if (!response.ok) throw new Error("Ağ yanıtı başarılı değil");
-    return await response.json();
+    try {
+      const response = await api.post("/api/prices/calculate", requestData);
+      return response.data;
+    } catch (error) {
+      console.error("Fiyat hesaplanamadı:", error);
+      throw error;
+    }
   },
 
   getPriceHistory: async (customerId = null) => {
-    const url = customerId
-      ? `/api/prices/history?customer_id=${customerId}`
-      : "/api/prices/history";
-    const response = await fetch(`${BASE_URL}${url}`, {
-      credentials: "include",
-      headers: {
-        "Content-Type": "application/json",
-      },
-    });
-    if (!response.ok) throw new Error("Ağ yanıtı başarılı değil");
-    return await response.json();
+    try {
+      const url = customerId
+        ? `/api/prices/history?customer_id=${customerId}`
+        : "/api/prices/history";
+      const response = await api.get(url);
+      return response.data;
+    } catch (error) {
+      console.error("Fiyat geçmişi alınamadı:", error);
+      throw error;
+    }
   },
 };
