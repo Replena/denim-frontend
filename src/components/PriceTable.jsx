@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useCallback } from "react";
 import {
   Paper,
   Table,
@@ -154,68 +154,78 @@ const PriceTable = ({
     );
   };
 
-  const renderPriceRow = (range) => {
-    if (!isCalculated || !calculatedPrices) {
-      console.log("Hesaplama yapılmadı veya fiyatlar yok");
-      return null;
-    }
+  const renderPriceRow = useCallback(
+    (range) => {
+      if (!calculatedPrices || !isCalculated || !exchangeRates) {
+        return null;
+      }
 
-    console.log("Hesaplanan fiyatlar:", calculatedPrices);
+      try {
+        const {
+          baseCost,
+          withOverhead,
+          vatAmount,
+          withProfit,
+          withCommission,
+          finalPrice,
+        } = calculatedPrices;
 
-    // Backend'den gelen değerleri kullan
-    const {
-      raw_cost,
-      overhead_amount,
-      profit_amount,
-      commission_amount,
-      vat_amount,
-      final_price,
-    } = calculatedPrices;
+        // Ara değerleri hesapla
+        const overheadAmount = withOverhead - baseCost;
+        const profitAmount = withProfit - withOverhead;
+        const commissionAmount = withCommission - withProfit;
 
-    // İndirim oranlarını belirle
-    let discountRate = 0;
-    switch (range) {
-      case "51-100":
-        discountRate = 0.05;
-        break;
-      case "101-200":
-        discountRate = 0.1;
-        break;
-      case "201-300":
-        discountRate = 0.15;
-        break;
-      case "301-500":
-        discountRate = 0.2;
-        break;
-      case "501+":
-        discountRate = 0.25;
-        break;
-      default:
-        discountRate = 0;
-    }
+        // Döviz kurlarıyla hesaplama
+        const finalPriceEUR = exchangeRates?.EUR_TRY
+          ? (finalPrice / exchangeRates.EUR_TRY).toFixed(2)
+          : "-";
+        const finalPriceUSD = exchangeRates?.USD_TRY
+          ? (finalPrice / exchangeRates.USD_TRY).toFixed(2)
+          : "-";
 
-    // İndirimli fiyatı hesapla
-    const discountedPrice = final_price * (1 - discountRate);
-
-    return (
-      <TableRow>
-        <TableCell>{range}</TableCell>
-        <TableCell>{formatCurrency(raw_cost)}</TableCell>
-        <TableCell>{formatCurrency(overhead_amount)}</TableCell>
-        <TableCell>{formatCurrency(raw_cost + overhead_amount)}</TableCell>
-        <TableCell>{formatCurrency(profit_amount)}</TableCell>
-        <TableCell>{formatCurrency(commission_amount)}</TableCell>
-        <TableCell>{formatCurrency(vat_amount)}</TableCell>
-        <TableCell>{formatCurrency(discountedPrice)}</TableCell>
-        <TableCell>
-          {formatCurrency(discountedPrice / exchangeRates.EUR_TRY, "EUR")}
-        </TableCell>
-        <TableCell>
-          {formatCurrency(discountedPrice / exchangeRates.USD_TRY, "USD")}
-        </TableCell>
-      </TableRow>
-    );
-  };
+        return (
+          <TableRow key={range}>
+            <TableCell>{range}</TableCell>
+            <TableCell>{baseCost?.toFixed(2) || "-"} ₺</TableCell>
+            <TableCell>
+              {overheadAmount?.toFixed(2) || "-"} ₺
+              <br />
+              <small>({parameters.overhead}%)</small>
+            </TableCell>
+            <TableCell>
+              {vatAmount?.toFixed(2) || "-"} ₺
+              <br />
+              <small>({parameters.vat}%)</small>
+            </TableCell>
+            <TableCell>
+              {profitAmount?.toFixed(2) || "-"} ₺
+              <br />
+              <small>(20%)</small>
+            </TableCell>
+            <TableCell>{withProfit?.toFixed(2) || "-"} ₺</TableCell>
+            <TableCell>
+              {commissionAmount?.toFixed(2) || "-"} ₺
+              <br />
+              <small>({parameters.commission}%)</small>
+            </TableCell>
+            <TableCell>
+              {finalPrice?.toFixed(2) || "-"} ₺
+              <br />
+              <small>
+                {finalPriceEUR} €
+                <br />
+                {finalPriceUSD} $
+              </small>
+            </TableCell>
+          </TableRow>
+        );
+      } catch (error) {
+        console.error("Fiyat satırı oluşturma hatası:", error);
+        return null;
+      }
+    },
+    [calculatedPrices, isCalculated, parameters, exchangeRates]
+  );
 
   return (
     <Box sx={{ mt: 4 }}>
@@ -283,21 +293,51 @@ const PriceTable = ({
             <TableRow>
               <TableCell>Miktar</TableCell>
               <TableCell>Ham Maliyet</TableCell>
-              <TableCell>Genel Gider</TableCell>
-              <TableCell>KDV</TableCell>
-              <TableCell>Kâr</TableCell>
+              <TableCell>
+                Genel Gider
+                <br />
+                <small>(%)</small>
+              </TableCell>
+              <TableCell>
+                KDV
+                <br />
+                <small>(%)</small>
+              </TableCell>
+              <TableCell>
+                Kâr
+                <br />
+                <small>(%)</small>
+              </TableCell>
               <TableCell>Ara Toplam</TableCell>
-              <TableCell>Komisyon</TableCell>
-              <TableCell>Final Fiyat</TableCell>
+              <TableCell>
+                Komisyon
+                <br />
+                <small>(%)</small>
+              </TableCell>
+              <TableCell>
+                Final Fiyat
+                <br />
+                <small>(₺/€/$)</small>
+              </TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
-            {renderPriceRow("0-50")}
-            {renderPriceRow("51-100")}
-            {renderPriceRow("101-200")}
-            {renderPriceRow("201-300")}
-            {renderPriceRow("301-500")}
-            {renderPriceRow("501+")}
+            {isCalculated && calculatedPrices ? (
+              <>
+                {renderPriceRow("0-50")}
+                {renderPriceRow("51-100")}
+                {renderPriceRow("101-200")}
+                {renderPriceRow("201-300")}
+                {renderPriceRow("301-500")}
+                {renderPriceRow("501+")}
+              </>
+            ) : (
+              <TableRow>
+                <TableCell colSpan={8} align="center">
+                  Hesaplama yapılmadı
+                </TableCell>
+              </TableRow>
+            )}
           </TableBody>
         </Table>
       </TableContainer>
