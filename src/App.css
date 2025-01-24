@@ -1,0 +1,151 @@
+:root {
+  --primary-color: #1e1e1e;
+  --secondary-color: #c4a962;
+  --background-color: #f5f2ea;
+  --text-color: #1e1e1e;
+  --border-color: #e5e5e5;
+  --hover-color: #b39855;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  min-height: 100vh;
+  background-color: var(--background-color);
+  color: var(--text-color);
+  display: flex;
+  justify-content: center;
+}
+
+.app-title {
+  color: var(--primary-color);
+  font-size: 2.8rem;
+  font-weight: bold;
+  text-align: left;
+  margin: 2rem 0;
+  letter-spacing: 1px;
+}
+
+.customer-section {
+  margin-bottom: 3rem;
+}
+
+.top-section {
+  display: flex;
+  gap: 2rem;
+  margin-bottom: 2rem;
+}
+
+.left-panel,
+.right-panel {
+  flex: 1;
+}
+
+/* Tablo stilleri */
+.MuiTableContainer-root {
+  box-shadow: none !important;
+  margin-bottom: 2rem;
+}
+
+.MuiTable-root {
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.MuiTableHead-root th {
+  background-color: var(--primary-color) !important;
+  color: white !important;
+  font-weight: 500 !important;
+  padding: 16px !important;
+  border-bottom: none !important;
+}
+
+.MuiTableBody-root td {
+  padding: 12px 16px !important;
+  border-bottom: 1px solid var(--border-color) !important;
+}
+
+.MuiTableRow-root:hover {
+  background-color: rgba(196, 169, 98, 0.05) !important;
+}
+
+/* Buton stilleri */
+.MuiButton-contained {
+  background-color: var(--secondary-color) !important;
+  color: white !important;
+  text-transform: none !important;
+  font-weight: 500 !important;
+  padding: 8px 24px !important;
+  border-radius: 4px !important;
+}
+
+.MuiButton-contained:hover {
+  background-color: var(--hover-color) !important;
+}
+
+/* Input stilleri */
+.MuiTextField-root {
+  background-color: white;
+  border-radius: 4px;
+}
+
+.MuiOutlinedInput-root {
+  border-color: var(--border-color) !important;
+}
+
+.MuiOutlinedInput-root:hover .MuiOutlinedInput-notchedOutline {
+  border-color: var(--secondary-color) !important;
+}
+
+/* Pagination stilleri */
+.MuiTablePagination-root {
+  color: var(--text-color) !important;
+}
+
+.MuiTablePagination-select {
+  padding-right: 24px !important;
+}
+
+/* Container stilleri */
+.container {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 40px;
+  box-sizing: border-box;
+}
+
+/* Tablo container'ı için özel stil - beyaz arkaplan kaldırıldı */
+.table-container {
+  padding: 0;
+  margin-bottom: 2rem;
+  background: none;
+  box-shadow: none;
+}
+
+/* Exchange rate display için stil */
+.exchange-rate {
+  margin-bottom: 2rem;
+  color: var(--text-color);
+}
+
+/* MaterialInput ve MaterialSummary için özel stiller */
+.material-input,
+.material-summary {
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  padding: 1.5rem;
+}
+
+/* Responsive tasarım için medya sorguları */
+@media (max-width: 768px) {
+  .top-section {
+    flex-direction: column;
+  }
+
+  .left-panel,
+  .right-panel {
+    width: 100%;
+  }
+}
