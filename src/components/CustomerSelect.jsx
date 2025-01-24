@@ -113,7 +113,16 @@ const CustomerSelect = ({ onCustomerSelect }) => {
         </Select>
       </FormControl>
 
-      <Button variant="contained" onClick={handleClickOpen}>
+      <Button
+        variant="contained"
+        onClick={handleClickOpen}
+        size="small"
+        sx={{
+          minWidth: "auto",
+          px: 2,
+          whiteSpace: "nowrap",
+        }}
+      >
         Yeni Müşteri
       </Button>
 
